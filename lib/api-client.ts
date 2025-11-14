@@ -13,9 +13,8 @@ export async function fetchRestaurantsByCity(city?: string, budget?: number, cui
   const params = new URLSearchParams()
   if (city) params.set("city", city)
   if (budget) params.set("budget", budget.toString())
-  if (cuisine) params.set("cuisine", cuisine)
 
-  const response = await fetch(`${API_BASE_URL}/restaurants?${params}`, {
+  const response = await fetch(`${API_BASE_URL}/restaurants/search?${params}`, {
     headers: getAuthHeaders(),
   })
 
@@ -30,11 +29,13 @@ export async function fetchRestaurantsByCity(city?: string, budget?: number, cui
     id: r.id.toString(),
     name: r.name,
     address: r.address,
-    city: city || "Bogotá",
-    lat: r.latitude || 4.711,
-    lon: r.longitude || -74.0721,
-    cuisine: r.cuisineType,
-    priceRange: r.averagePricePerPerson ? `$${(r.averagePricePerPerson / 10000).toFixed(0)}` : "$$"
+    city: r.city || city || "Bogotá",
+    lat: r.lat || 4.711,
+    lon: r.lon || -74.0721,
+    cuisine: r.cuisine,
+    phone: r.phone,
+    website: r.website,
+    priceRange: r.priceRange || "$$"
   }))
 }
 
@@ -196,6 +197,23 @@ export async function fetchMyReviews() {
   return response.json()
 }
 
+export async function updateRestaurant(restaurantId: number, restaurantData: any) {
+  const response = await fetch(`${API_BASE_URL}/restaurants/${restaurantId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(restaurantData),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to update restaurant")
+  }
+
+  return response.json()
+}
+
 export async function createReview(review: { restaurant: { id: number }, rating: number, comment: string }) {
   const response = await fetch(`${API_BASE_URL}/reviews`, {
     method: "POST",
@@ -273,31 +291,7 @@ export async function deleteMenuItem(id: number) {
   return response.json()
 }
 
-// Recommendations
+// Recommendations (same as fetchRestaurantsByCity for now)
 export async function fetchPersonalizedRecommendations(city?: string, budget?: number) {
-  const params = new URLSearchParams()
-  if (city) params.set("city", city)
-  if (budget) params.set("budget", budget.toString())
-
-  const response = await fetch(`${API_BASE_URL}/recommendations?${params}`, {
-    headers: getAuthHeaders(),
-  })
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch recommendations")
-  }
-
-  const restaurants = await response.json()
-
-  // Transform backend data to match frontend expectations
-  return restaurants.map((r: any) => ({
-    id: r.id.toString(),
-    name: r.name,
-    address: r.address,
-    city: city || "Bogotá",
-    lat: r.latitude || 4.711,
-    lon: r.longitude || -74.0721,
-    cuisine: r.cuisineType,
-    priceRange: r.averagePricePerPerson ? `$${(r.averagePricePerPerson / 10000).toFixed(0)}` : "$$"
-  }))
+  return fetchRestaurantsByCity(city, budget)
 }

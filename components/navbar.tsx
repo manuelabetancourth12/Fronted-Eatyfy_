@@ -9,7 +9,7 @@ import { fetchUserProfile } from "@/lib/api-client"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState<{ name: string } | null>(null)
+  const [user, setUser] = useState<{ name: string; role?: string } | null>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -69,14 +69,25 @@ export function Navbar() {
                 >
                   Mi perfil
                 </Link>
-                <Link
-                  href="/register-restaurant"
-                  className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
-                    pathname === "/register-restaurant" ? "text-gray-900 font-semibold" : ""
-                  }`}
-                >
-                  Registrar Restaurante
-                </Link>
+                {user.role === "RESTAURANT" ? (
+                  <Link
+                    href="/restaurant-dashboard"
+                    className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
+                      pathname === "/restaurant-dashboard" ? "text-gray-900 font-semibold" : ""
+                    }`}
+                  >
+                    Panel Restaurante
+                  </Link>
+                ) : (
+                  <Link
+                    href="/register-restaurant"
+                    className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
+                      pathname === "/register-restaurant" ? "text-gray-900 font-semibold" : ""
+                    }`}
+                  >
+                    Registrar Restaurante
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -146,13 +157,23 @@ export function Navbar() {
                 >
                   Mi perfil
                 </Link>
-                <Link
-                  href="/register-restaurant"
-                  className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Registrar Restaurante
-                </Link>
+                {user.role === "RESTAURANT" ? (
+                  <Link
+                    href="/restaurant-dashboard"
+                    className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Panel Restaurante
+                  </Link>
+                ) : (
+                  <Link
+                    href="/register-restaurant"
+                    className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Registrar Restaurante
+                  </Link>
+                )}
               </>
             )}
             <div className="pt-3 border-t border-pink-200 space-y-2">

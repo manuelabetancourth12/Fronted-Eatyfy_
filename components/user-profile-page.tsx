@@ -10,16 +10,25 @@ import { Label } from "./ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { NotificationsPanel } from "./notifications-panel"
 import { PromotionsList } from "./promotions-list"
-import { fetchUserProfile, updateUserProfile } from "@/lib/api-client"
-import { User, Mail, Camera, Save, Loader2 } from "lucide-react"
+import { ReviewsList } from "./reviews-list"
+import { fetchUserProfile, updateUserProfile, fetchMyReviews } from "@/lib/api-client"
+import { FoodPreferencesSurvey } from "./food-preferences-survey"
+import { User, Mail, Camera, Save, Loader2, Star, Utensils, Settings, MessageSquare } from "lucide-react"
 
 export function UserProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [foodPreferences, setFoodPreferences] = useState<any>({
+    favoriteCuisines: [],
+    dietaryRestrictions: [],
+    diningFrequency: ""
+  })
+  const [myReviews, setMyReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState("profile")
   const router = useRouter()
 
   useEffect(() => {
@@ -34,6 +43,24 @@ export function UserProfilePage() {
       setName(userData.name || "")
       setEmail(userData.email || "")
       setProfileImage(userData.profileImage || null)
+
+      // Parse food preferences
+      if (userData.foodPreferences) {
+        try {
+          const parsed = JSON.parse(userData.foodPreferences)
+          setFoodPreferences({
+            favoriteCuisines: parsed.favoriteCuisines || [],
+            dietaryRestrictions: parsed.dietaryRestrictions || [],
+            diningFrequency: parsed.diningFrequency || ""
+          })
+        } catch (e) {
+          console.warn("Error parsing food preferences:", e)
+        }
+      }
+
+      // Load reviews
+      const reviewsData = await fetchMyReviews()
+      setMyReviews(reviewsData)
     } catch (error) {
       console.error("[v0] Error loading profile:", error)
       // If not logged in, redirect to login
@@ -76,6 +103,27 @@ export function UserProfilePage() {
     }
   }
 
+  const handleSavePreferences = async (preferences: any) => {
+    setSaving(true)
+
+    try {
+      const updatedData = {
+        ...user,
+        foodPreferences: JSON.stringify(preferences)
+      }
+
+      await updateUserProfile(updatedData)
+      setUser(updatedData)
+
+      alert("Preferencias actualizadas exitosamente")
+    } catch (error) {
+      console.error("[v0] Error updating preferences:", error)
+      alert("Error al actualizar las preferencias")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <main className="flex-1 bg-[var(--color-muted)] flex items-center justify-center py-12">
@@ -98,9 +146,50 @@ export function UserProfilePage() {
           </p>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "profile"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <User className="w-4 h-4 inline mr-2" />
+              Perfil
+            </button>
+            <button
+              onClick={() => setActiveTab("preferences")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "preferences"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <Settings className="w-4 h-4 inline mr-2" />
+              Preferencias
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "reviews"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <MessageSquare className="w-4 h-4 inline mr-2" />
+              Mis Reseñas
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Form */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {activeTab === "profile" && (
+              <>
             <Card>
               <CardHeader>
                 <CardTitle>Información personal</CardTitle>
@@ -182,6 +271,85 @@ export function UserProfilePage() {
                 </form>
               </CardContent>
             </Card>
+
+            )}
+
+            {activeTab === "preferences" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Utensils className="w-5 h-5" />
+                    Preferencias gastronómicas
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Actualiza tus preferencias para recibir mejores recomendaciones
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <FoodPreferencesSurvey
+                    onComplete={handleSavePreferences}
+                    initialData={foodPreferences}
+                    showTitle={false}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "reviews" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Mis reseñas
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Historial de tus reseñas y calificaciones
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {myReviews.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Aún no has dejado reseñas</p>
+                      <p className="text-sm text-gray-500">
+                        Visita restaurantes y comparte tu experiencia
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {myReviews.map((review: any) => (
+                        <div key={review.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{review.restaurant?.name || "Restaurante"}</h4>
+                              <p className="text-sm text-gray-500">
+                                {new Date(review.createdAt).toLocaleDateString('es-ES')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? "text-yellow-400 fill-yellow-400"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                              <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
+                            </div>
+                          </div>
+                          {review.comment && (
+                            <p className="text-gray-700 text-sm mt-2">{review.comment}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Notifications */}
             <Card>
