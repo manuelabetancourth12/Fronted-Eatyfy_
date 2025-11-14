@@ -7,16 +7,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { fetchRestaurantsByCity } from "@/lib/api-client"
 
 export function HomePage() {
   const [selectedCity, setSelectedCity] = useState("Bogotá, Medellin, Cali, Barranquilla...")
   const [budget, setBudget] = useState("50000")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [restaurants, setRestaurants] = useState<any[]>([])
   const router = useRouter()
 
   useEffect(() => {
     const token = localStorage.getItem("eatyfy_token")
     setIsLoggedIn(!!token)
+
+    // Fetch some restaurants for recommendations
+    fetchRestaurantsByCity().then(data => {
+      setRestaurants(data.slice(0, 3)) // Show first 3
+    }).catch(() => {
+      // Fallback to mock if no data
+      setRestaurants([
+        { id: 1, name: "Restaurante 1", averagePricePerPerson: 30000, address: "Bogotá", cuisineType: "Italiana" },
+        { id: 2, name: "Restaurante 2", averagePricePerPerson: 50000, address: "Medellín", cuisineType: "Mexicana" },
+        { id: 3, name: "Restaurante 3", averagePricePerPerson: 25000, address: "Cali", cuisineType: "Colombiana" },
+      ])
+    })
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -33,12 +47,6 @@ export function HomePage() {
   const handleGetStarted = () => {
     router.push("/restaurants")
   }
-
-  const mockRestaurants = [
-    { id: 1, name: "Restaurante 1", price: "$", city: "Bogotá", description: "Vista previa de platos o estilo." },
-    { id: 2, name: "Restaurante 2", price: "$$", city: "Medellín", description: "Vista previa de platos o estilo." },
-    { id: 3, name: "Restaurante 3", price: "$", city: "Cali", description: "Vista previa de platos o estilo." },
-  ]
 
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
@@ -119,18 +127,18 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold mb-8 text-gray-900">Recomendados para ti</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {mockRestaurants.map((restaurant) => (
+            {restaurants.map((restaurant: any) => (
               <Card key={restaurant.id} className="bg-pink-50 border-pink-200">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-2 text-gray-900">{restaurant.name}</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    {restaurant.price} • {restaurant.city}
+                    ${restaurant.averagePricePerPerson || "N/A"} • {restaurant.address}
                   </p>
-                  <p className="text-sm text-gray-600 mb-4">{restaurant.description}</p>
+                  <p className="text-sm text-gray-600 mb-4">{restaurant.cuisineType || "Sin descripción"}</p>
                   <Button
                     variant="outline"
                     className="w-full border-gray-300 bg-transparent"
-                    onClick={() => router.push("/restaurants")}
+                    onClick={() => router.push(`/restaurants/${restaurant.id}`)}
                   >
                     Ver detalles
                   </Button>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Menu, X, User, Utensils } from "lucide-react"
+import { fetchUserProfile } from "@/lib/api-client"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,9 +14,13 @@ export function Navbar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    const userData = localStorage.getItem("eatyfy_user")
-    if (userData) {
-      setUser(JSON.parse(userData))
+    const token = localStorage.getItem("eatyfy_token")
+    if (token) {
+      fetchUserProfile().then(setUser).catch(() => {
+        // If token invalid, clear it
+        localStorage.removeItem("eatyfy_token")
+        localStorage.removeItem("eatyfy_user")
+      })
     }
   }, [])
 
