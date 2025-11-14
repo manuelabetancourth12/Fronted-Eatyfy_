@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { MapWrapper } from "./map-wrapper"
 import { BudgetCalculator } from "./budget-calculator"
+import { ReviewForm } from "./review-form"
+import { ReviewsList } from "./reviews-list"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { fetchRestaurantDetails, fetchPromotions } from "@/lib/api-client"
@@ -30,6 +32,7 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [promotions, setPromotions] = useState<any[]>([])
+  const [refreshReviews, setRefreshReviews] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -178,6 +181,15 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
           <div className="space-y-6">
             {/* Budget Calculator */}
             <BudgetCalculator restaurantId={restaurantId} restaurantName={restaurant.name} />
+
+            {/* Review Form */}
+            <ReviewForm
+              restaurantId={parseInt(restaurantId)}
+              onReviewSubmitted={() => setRefreshReviews(prev => prev + 1)}
+            />
+
+            {/* Reviews List */}
+            <ReviewsList key={refreshReviews} restaurantId={parseInt(restaurantId)} limit={5} />
 
             {/* Promotions */}
             <Card>

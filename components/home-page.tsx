@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { fetchPersonalizedRecommendations } from "@/lib/api-client"
+import { fetchUserProfile } from "@/lib/api-client"
 import { fetchRestaurantsByCity } from "@/lib/api-client"
 
 export function HomePage() {
@@ -14,24 +16,47 @@ export function HomePage() {
   const [budget, setBudget] = useState("50000")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [restaurants, setRestaurants] = useState<any[]>([])
+  const [personalizedRestaurants, setPersonalizedRestaurants] = useState<any[]>([])
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     const token = localStorage.getItem("eatyfy_token")
     setIsLoggedIn(!!token)
 
-    // Fetch some restaurants for recommendations
-    fetchRestaurantsByCity().then(data => {
-      setRestaurants(data.slice(0, 3)) // Show first 3
-    }).catch(() => {
-      // Fallback to mock if no data
-      setRestaurants([
-        { id: 1, name: "Restaurante 1", averagePricePerPerson: 30000, address: "Bogotá", cuisineType: "Italiana" },
-        { id: 2, name: "Restaurante 2", averagePricePerPerson: 50000, address: "Medellín", cuisineType: "Mexicana" },
-        { id: 3, name: "Restaurante 3", averagePricePerPerson: 25000, address: "Cali", cuisineType: "Colombiana" },
-      ])
-    })
+    if (token) {
+      loadPersonalizedRecommendations()
+    } else {
+      // For non-logged-in users, show general recommendations
+      fetchRestaurantsByCity().then(data => {
+        setRestaurants(data.slice(0, 3)) // Show first 3
+      }).catch(() => {
+        // Fallback to mock if no data
+        setRestaurants([
+          { id: 1, name: "Restaurante 1", averagePricePerPerson: 30000, address: "Bogotá", cuisineType: "Italiana" },
+          { id: 2, name: "Restaurante 2", averagePricePerPerson: 50000, address: "Medellín", cuisineType: "Mexicana" },
+          { id: 3, name: "Restaurante 3", averagePricePerPerson: 25000, address: "Cali", cuisineType: "Colombiana" },
+        ])
+      })
+    }
   }, [])
+
+  const loadPersonalizedRecommendations = async () => {
+    setLoadingRecommendations(true)
+    try {
+      const recommendations = await fetchPersonalizedRecommendations(
+        selectedCity.split(",")[0].trim(),
+        budget ? Number.parseInt(budget) : undefined
+      )
+      setPersonalizedRestaurants(recommendations.slice(0, 3)) // Show top 3 personalized
+    } catch (error) {
+      console.error("Error loading personalized recommendations:", error)
+      // Fallback to general recommendations
+      setPersonalizedRestaurants([])
+    } finally {
+      setLoadingRecommendations(false)
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -125,27 +150,49 @@ export function HomePage() {
       {/* Recommendations Section */}
       <section className="py-12 bg-pink-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8 text-gray-900">Recomendados para ti</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {restaurants.map((restaurant: any) => (
-              <Card key={restaurant.id} className="bg-pink-50 border-pink-200">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    ${restaurant.averagePricePerPerson || "N/A"} • {restaurant.address}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-4">{restaurant.cuisineType || "Sin descripción"}</p>
-                  <Button
-                    variant="outline"
-                    className="w-full border-gray-300 bg-transparent"
-                    onClick={() => router.push(`/restaurants/${restaurant.id}`)}
-                  >
-                    Ver detalles
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <h2 className="text-2xl font-bold mb-8 text-gray-900">
+            {isLoggedIn ? "Recomendados para ti" : "Restaurantes destacados"}
+          </h2>
+
+          {isLoggedIn && loadingRecommendations ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+              <span className="ml-3 text-gray-600">Cargando recomendaciones personalizadas...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {(isLoggedIn ? personalizedRestaurants : restaurants).map((restaurant: any) => (
+                <Card key={restaurant.id} className="bg-pink-50 border-pink-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900">{restaurant.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      ${restaurant.averagePricePerPerson || restaurant.priceRange || "N/A"} • {restaurant.address || restaurant.city}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-4">{restaurant.cuisine || restaurant.cuisineType || "Sin descripción"}</p>
+                    {isLoggedIn && (
+                      <div className="mb-3 p-2 bg-pink-100 rounded-lg">
+                        <p className="text-xs text-pink-800 font-medium">🎯 Recomendación personalizada</p>
+                      </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="w-full border-gray-300 bg-transparent"
+                      onClick={() => router.push(`/restaurants/${restaurant.id}`)}
+                    >
+                      Ver detalles
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {isLoggedIn && personalizedRestaurants.length === 0 && !loadingRecommendations && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 mb-4">No se encontraron recomendaciones personalizadas.</p>
+              <p className="text-sm text-gray-500">Actualiza tus preferencias en tu perfil para mejores recomendaciones.</p>
+            </div>
+          )}
         </div>
       </section>
     </main>

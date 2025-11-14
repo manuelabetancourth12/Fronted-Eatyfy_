@@ -184,6 +184,18 @@ export async function fetchReviewsByRestaurant(restaurantId: number) {
   return response.json()
 }
 
+export async function fetchMyReviews() {
+  const response = await fetch(`${API_BASE_URL}/reviews/my`, {
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch my reviews")
+  }
+
+  return response.json()
+}
+
 export async function createReview(review: { restaurant: { id: number }, rating: number, comment: string }) {
   const response = await fetch(`${API_BASE_URL}/reviews`, {
     method: "POST",
@@ -259,4 +271,33 @@ export async function deleteMenuItem(id: number) {
   }
 
   return response.json()
+}
+
+// Recommendations
+export async function fetchPersonalizedRecommendations(city?: string, budget?: number) {
+  const params = new URLSearchParams()
+  if (city) params.set("city", city)
+  if (budget) params.set("budget", budget.toString())
+
+  const response = await fetch(`${API_BASE_URL}/recommendations?${params}`, {
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch recommendations")
+  }
+
+  const restaurants = await response.json()
+
+  // Transform backend data to match frontend expectations
+  return restaurants.map((r: any) => ({
+    id: r.id.toString(),
+    name: r.name,
+    address: r.address,
+    city: city || "Bogotá",
+    lat: r.latitude || 4.711,
+    lon: r.longitude || -74.0721,
+    cuisine: r.cuisineType,
+    priceRange: r.averagePricePerPerson ? `$${(r.averagePricePerPerson / 10000).toFixed(0)}` : "$$"
+  }))
 }
