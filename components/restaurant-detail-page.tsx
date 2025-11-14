@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { MapWrapper } from "./map-wrapper"
+import { BudgetCalculator } from "./budget-calculator"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { fetchRestaurantDetails, fetchPromotions } from "@/lib/api-client"
@@ -175,6 +176,9 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Budget Calculator */}
+            <BudgetCalculator restaurantId={restaurantId} restaurantName={restaurant.name} />
+
             {/* Promotions */}
             <Card>
               <CardHeader>

@@ -8,11 +8,12 @@ function getAuthHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-// Fetch restaurants by city and budget
-export async function fetchRestaurantsByCity(city?: string, budget?: number) {
+// Fetch restaurants by city, budget, and cuisine
+export async function fetchRestaurantsByCity(city?: string, budget?: number, cuisine?: string) {
   const params = new URLSearchParams()
   if (city) params.set("city", city)
   if (budget) params.set("budget", budget.toString())
+  if (cuisine) params.set("cuisine", cuisine)
 
   const response = await fetch(`${API_BASE_URL}/restaurants?${params}`, {
     headers: getAuthHeaders(),
@@ -22,7 +23,19 @@ export async function fetchRestaurantsByCity(city?: string, budget?: number) {
     throw new Error("Failed to fetch restaurants")
   }
 
-  return response.json()
+  const restaurants = await response.json()
+
+  // Transform backend data to match frontend expectations
+  return restaurants.map((r: any) => ({
+    id: r.id.toString(),
+    name: r.name,
+    address: r.address,
+    city: city || "Bogotá",
+    lat: r.latitude || 4.711,
+    lon: r.longitude || -74.0721,
+    cuisine: r.cuisineType,
+    priceRange: r.averagePricePerPerson ? `$${(r.averagePricePerPerson / 10000).toFixed(0)}` : "$$"
+  }))
 }
 
 // Fetch restaurant details by ID
@@ -66,6 +79,23 @@ export async function registerUser(data: { name: string; email: string; password
 
   if (!response.ok) {
     throw new Error("Registration failed")
+  }
+
+  return response.json()
+}
+
+export async function registerRestaurant(restaurantData: any) {
+  const response = await fetch(`${API_BASE_URL}/restaurants`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(restaurantData),
+  })
+
+  if (!response.ok) {
+    throw new Error("Restaurant registration failed")
   }
 
   return response.json()
@@ -166,6 +196,66 @@ export async function createReview(review: { restaurant: { id: number }, rating:
 
   if (!response.ok) {
     throw new Error("Failed to create review")
+  }
+
+  return response.json()
+}
+
+// Menu Items
+export async function fetchMenuItems(restaurantId: number) {
+  const response = await fetch(`${API_BASE_URL}/menu-items/restaurant/${restaurantId}`, {
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch menu items")
+  }
+
+  return response.json()
+}
+
+export async function createMenuItem(menuItem: any) {
+  const response = await fetch(`${API_BASE_URL}/menu-items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(menuItem),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to create menu item")
+  }
+
+  return response.json()
+}
+
+export async function updateMenuItem(id: number, menuItem: any) {
+  const response = await fetch(`${API_BASE_URL}/menu-items/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(menuItem),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to update menu item")
+  }
+
+  return response.json()
+}
+
+export async function deleteMenuItem(id: number) {
+  const response = await fetch(`${API_BASE_URL}/menu-items/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to delete menu item")
   }
 
   return response.json()

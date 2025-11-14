@@ -48,7 +48,11 @@ export function RestaurantsPage() {
         setMapCenter([cityData.lat, cityData.lon])
       }
 
-      const data = await fetchRestaurantsByCity(city, budget ? Number.parseInt(budget) : undefined)
+      const data = await fetchRestaurantsByCity(
+        city,
+        budget ? Number.parseInt(budget) : undefined,
+        cuisineType || undefined
+      )
       setRestaurants(data)
     } catch (error) {
       console.error("[v0] Error loading restaurants:", error)

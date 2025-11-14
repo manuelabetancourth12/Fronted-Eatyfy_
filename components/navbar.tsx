@@ -60,14 +60,24 @@ export function Navbar() {
               Restaurantes
             </Link>
             {user && (
-              <Link
-                href="/profile"
-                className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
-                  pathname === "/profile" ? "text-gray-900 font-semibold" : ""
-                }`}
-              >
-                Mi perfil
-              </Link>
+              <>
+                <Link
+                  href="/profile"
+                  className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
+                    pathname === "/profile" ? "text-gray-900 font-semibold" : ""
+                  }`}
+                >
+                  Mi perfil
+                </Link>
+                <Link
+                  href="/register-restaurant"
+                  className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
+                    pathname === "/register-restaurant" ? "text-gray-900 font-semibold" : ""
+                  }`}
+                >
+                  Registrar Restaurante
+                </Link>
+              </>
             )}
           </div>
 
@@ -128,13 +138,22 @@ export function Navbar() {
               Restaurantes
             </Link>
             {user && (
-              <Link
-                href="/profile"
-                className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                Mi perfil
-              </Link>
+              <>
+                <Link
+                  href="/profile"
+                  className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Mi perfil
+                </Link>
+                <Link
+                  href="/register-restaurant"
+                  className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Registrar Restaurante
+                </Link>
+              </>
             )}
             <div className="pt-3 border-t border-pink-200 space-y-2">
               {user ? (
