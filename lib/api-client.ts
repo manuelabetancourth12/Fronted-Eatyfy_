@@ -1,6 +1,6 @@
 // API Client for backend communication
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082/api"
 
 // Helper function to get auth headers
 function getAuthHeaders(): Record<string, string> {

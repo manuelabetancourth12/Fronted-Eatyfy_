@@ -189,89 +189,87 @@ export function UserProfilePage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {activeTab === "profile" && (
-              <>
-            <Card>
-              <CardHeader>
-                <CardTitle>Información personal</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSave} className="space-y-6">
-                  {/* Profile Image */}
-                  <div className="flex items-center gap-6">
-                    <div className="relative">
-                      <div className="w-24 h-24 rounded-full bg-[var(--color-muted)] flex items-center justify-center overflow-hidden">
-                        {profileImage ? (
-                          <img
-                            src={profileImage || "/placeholder.svg"}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
+              <Card>
+                <CardHeader>
+                  <CardTitle>Información personal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSave} className="space-y-6">
+                    {/* Profile Image */}
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-24 h-24 rounded-full bg-[var(--color-muted)] flex items-center justify-center overflow-hidden">
+                          {profileImage ? (
+                            <img
+                              src={profileImage || "/placeholder.svg"}
+                              alt="Profile"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-12 h-12 text-[var(--color-muted-foreground)]" />
+                          )}
+                        </div>
+                        <label
+                          htmlFor="profile-image"
+                          className="absolute bottom-0 right-0 w-8 h-8 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--color-primary-dark)] transition-colors"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <input
+                            id="profile-image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
                           />
-                        ) : (
-                          <User className="w-12 h-12 text-[var(--color-muted-foreground)]" />
-                        )}
+                        </label>
                       </div>
-                      <label
-                        htmlFor="profile-image"
-                        className="absolute bottom-0 right-0 w-8 h-8 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--color-primary-dark)] transition-colors"
-                      >
-                        <Camera className="w-4 h-4" />
-                        <input
-                          id="profile-image"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                        />
-                      </label>
+                      <div>
+                        <p className="font-medium mb-1">Foto de perfil</p>
+                        <p className="text-sm text-[var(--color-muted-foreground)]">
+                          Haz clic en el ícono para cambiar tu imagen
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium mb-1">Foto de perfil</p>
-                      <p className="text-sm text-[var(--color-muted-foreground)]">
-                        Haz clic en el ícono para cambiar tu imagen
-                      </p>
+
+                    {/* Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Nombre completo
+                      </Label>
+                      <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
                     </div>
-                  </div>
 
-                  {/* Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Nombre completo
-                    </Label>
-                    <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-                  </div>
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Correo electrónico
+                      </Label>
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Correo electrónico
-                    </Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-
-                  {/* Save Button */}
-                  <Button
-                    type="submit"
-                    className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white"
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Guardar cambios
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
+                    {/* Save Button */}
+                    <Button
+                      type="submit"
+                      className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white"
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Guardar cambios
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
             )}
 
             {activeTab === "preferences" && (
