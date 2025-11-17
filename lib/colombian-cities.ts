@@ -23,7 +23,7 @@ export async function fetchColombianCities(): Promise<ColombianCity[]> {
   }
 
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8084"
     const response = await fetch(`${API_BASE_URL}/api/cities/list`)
 
     if (!response.ok) {

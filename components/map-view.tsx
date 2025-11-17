@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, memo } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 
@@ -25,7 +25,7 @@ interface MapViewProps {
   className?: string
 }
 
-export function MapView({ center, zoom = 13, markers = [], onMarkerClick, className = "" }: MapViewProps) {
+export const MapView = memo(function MapView({ center, zoom = 13, markers = [], onMarkerClick, className = "" }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersLayerRef = useRef<L.LayerGroup | null>(null)
@@ -71,14 +71,24 @@ export function MapView({ center, zoom = 13, markers = [], onMarkerClick, classN
 
     // Add new markers
     markers.forEach((marker) => {
-      const leafletMarker = L.marker(marker.position).bindPopup(`
+      const isUserLocation = marker.id === "user-location"
+      const markerOptions = isUserLocation ? {
+        icon: L.divIcon({
+          html: '<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);"></div>',
+          className: 'custom-user-marker',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        })
+      } : {}
+
+      const leafletMarker = L.marker(marker.position, markerOptions).bindPopup(`
           <div class="text-sm">
             <strong class="font-semibold">${marker.name}</strong>
             ${marker.address ? `<br/><span class="text-gray-600">${marker.address}</span>` : ""}
           </div>
         `)
 
-      if (onMarkerClick) {
+      if (onMarkerClick && !isUserLocation) {
         leafletMarker.on("click", () => onMarkerClick(marker.id))
       }
 
@@ -93,4 +103,4 @@ export function MapView({ center, zoom = 13, markers = [], onMarkerClick, classN
   }, [markers, onMarkerClick])
 
   return <div ref={mapContainerRef} className={`w-full h-full min-h-[400px] rounded-lg ${className}`} />
-}
+});
