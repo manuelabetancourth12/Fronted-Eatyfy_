@@ -160,12 +160,8 @@ export function RestaurantDashboard() {
               Información
             </button>
             <button
-              onClick={() => setActiveTab("menu")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "menu"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              onClick={() => router.push(`/restaurant-dashboard/menu`)}
+              className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-gray-900"
             >
               <Utensils className="w-4 h-4 inline mr-2" />
               Menú
@@ -309,18 +305,25 @@ export function RestaurantDashboard() {
                 <CardHeader>
                   <CardTitle>Gestión del Menú</CardTitle>
                   <p className="text-sm text-gray-600">
-                    Próximamente: gestión completa del menú con platos y precios
+                    Gestiona los platos de tu restaurante
                   </p>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
-                    <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <Utensils className="w-16 h-16 text-pink-300 mx-auto mb-4" />
                     <p className="text-gray-600 mb-4">
-                      La gestión del menú estará disponible próximamente
+                      Administra tu menú completo desde aquí
                     </p>
-                    <p className="text-sm text-gray-500">
-                      Podrás añadir, editar y eliminar platos con sus precios y descripciones
+                    <p className="text-sm text-gray-500 mb-6">
+                      Añade, edita y elimina platos con precios y descripciones
                     </p>
+                    <Button
+                      onClick={() => router.push('/restaurant-dashboard/menu')}
+                      className="bg-pink-500 hover:bg-pink-600"
+                    >
+                      <Utensils className="w-4 h-4 mr-2" />
+                      Gestionar Menú
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

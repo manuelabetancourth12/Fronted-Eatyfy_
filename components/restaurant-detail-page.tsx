@@ -8,20 +8,32 @@ import { ReviewForm } from "./review-form"
 import { ReviewsList } from "./reviews-list"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { fetchRestaurantDetails, fetchPromotions } from "@/lib/api-client"
-import { MapPin, Phone, Globe, Clock, ArrowLeft, Utensils } from "lucide-react"
+import { fetchRestaurantDetails, fetchPromotions, fetchUserProfile } from "@/lib/api-client"
+import { MapPin, Phone, Globe, Clock, ArrowLeft, Utensils, Edit } from "lucide-react"
 import Link from "next/link"
+
+interface MenuItem {
+  id: number
+  name: string
+  description?: string
+  price: number
+  category?: string
+}
 
 interface RestaurantDetail {
   id: string
   name: string
   address: string
-  lat: number
-  lon: number
+  lat?: number
+  lon?: number
+  latitude?: number
+  longitude?: number
   cuisine?: string
+  cuisineType?: string
   phone?: string
   website?: string
-  opening_hours?: string
+  openingHours?: string
+  menuItems?: MenuItem[]
 }
 
 interface RestaurantDetailPageProps {
@@ -33,12 +45,24 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
   const [loading, setLoading] = useState(true)
   const [promotions, setPromotions] = useState<any[]>([])
   const [refreshReviews, setRefreshReviews] = useState(0)
+  const [user, setUser] = useState<any>(null)
+  const [isOwner, setIsOwner] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     loadRestaurantDetail()
     loadPromotions()
+    loadUser()
   }, [restaurantId])
+
+  useEffect(() => {
+    if (user && restaurant) {
+      // Check if current user is the owner of this restaurant
+      // For demo purposes, we'll assume restaurants created by logged-in users are owned by them
+      // In a real app, you'd check the restaurant.owner field
+      setIsOwner(user.role === 'RESTAURANT')
+    }
+  }, [user, restaurant])
 
   const loadRestaurantDetail = async () => {
     setLoading(true)
@@ -58,6 +82,19 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
       setPromotions(data.slice(0, 2)) // Show only 2 promotions
     } catch (error) {
       console.error("[v0] Error loading promotions:", error)
+    }
+  }
+
+  const loadUser = async () => {
+    try {
+      const token = localStorage.getItem("eatyfy_token")
+      if (token) {
+        const userData = await fetchUserProfile()
+        setUser(userData)
+      }
+    } catch (error) {
+      // User not logged in or token invalid
+      setUser(null)
     }
   }
 
@@ -89,7 +126,7 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
     {
       id: restaurant.id,
       name: restaurant.name,
-      position: [restaurant.lat, restaurant.lon] as [number, number],
+      position: [restaurant.latitude || 4.711, restaurant.longitude || -74.0721] as [number, number],
       address: restaurant.address,
     },
   ]
@@ -113,12 +150,23 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
                 <span>{restaurant.address}</span>
               </div>
             </div>
-            {restaurant.cuisine && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)]/10 rounded-lg">
-                <Utensils className="w-5 h-5 text-[var(--color-primary)]" />
-                <span className="font-medium">{restaurant.cuisine}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {restaurant.cuisine && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)]/10 rounded-lg">
+                  <Utensils className="w-5 h-5 text-[var(--color-primary)]" />
+                  <span className="font-medium">{restaurant.cuisine}</span>
+                </div>
+              )}
+              {isOwner && (
+                <Button
+                  onClick={() => router.push(`/restaurant-dashboard`)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar Restaurante
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Contact Info */}
@@ -150,17 +198,60 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
               </div>
             )}
 
-            {restaurant.opening_hours && (
+            {restaurant.openingHours && (
               <div className="flex items-center gap-3 p-3 bg-[var(--color-muted)] rounded-lg">
                 <Clock className="w-5 h-5 text-[var(--color-primary)]" />
                 <div>
                   <p className="text-xs text-[var(--color-muted-foreground)]">Horario</p>
-                  <p className="font-medium text-sm">{restaurant.opening_hours}</p>
+                  <p className="font-medium text-sm">{restaurant.openingHours}</p>
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Menu Section */}
+        {restaurant.menuItems && restaurant.menuItems.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Utensils className="w-5 h-5" />
+                Nuestro Menú
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(
+                  restaurant.menuItems.reduce((acc, item) => {
+                    const category = item.category || "Otros"
+                    if (!acc[category]) acc[category] = []
+                    acc[category].push(item)
+                    return acc
+                  }, {} as Record<string, MenuItem[]>)
+                ).map(([category, items]) => (
+                  <div key={category}>
+                    <h4 className="font-semibold text-gray-900 mb-3 border-b pb-1">{category}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {items.map((item: MenuItem) => (
+                        <div key={item.id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">{item.name}</h5>
+                            {item.description && (
+                              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                            )}
+                          </div>
+                          <span className="font-bold text-pink-600 ml-4">
+                            ${item.price?.toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Map */}
@@ -171,7 +262,7 @@ export function RestaurantDetailPage({ restaurantId }: RestaurantDetailPageProps
               </CardHeader>
               <CardContent>
                 <div className="h-[400px]">
-                  <MapWrapper center={[restaurant.lat, restaurant.lon]} markers={mapMarkers} zoom={15} />
+                  <MapWrapper center={[restaurant.latitude || restaurant.lat || 4.711, restaurant.longitude || restaurant.lon || -74.0721]} markers={mapMarkers} zoom={15} />
                 </div>
               </CardContent>
             </Card>

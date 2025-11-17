@@ -5,7 +5,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8084/a
 // Helper function to get auth headers
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem("eatyfy_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  // Only return auth header if token exists and is not expired
+  if (token) {
+    try {
+      // Basic check if token is valid (you might want to decode and check expiration)
+      return { Authorization: `Bearer ${token}` }
+    } catch (error) {
+      // If token is invalid, remove it
+      localStorage.removeItem("eatyfy_token")
+      localStorage.removeItem("eatyfy_user")
+      return {}
+    }
+  }
+  return {}
 }
 
 // Fetch restaurants by city, budget, and cuisine
@@ -41,15 +53,23 @@ export async function fetchRestaurantsByCity(city?: string, budget?: number, cui
 
 // Fetch restaurant details by ID
 export async function fetchRestaurantDetails(id: string) {
-  const response = await fetch(`${API_BASE_URL}/restaurants/${id}`, {
-    headers: getAuthHeaders(),
-  })
+  try {
+    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`, {
+      headers: getAuthHeaders(),
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch restaurant details")
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("Restaurante no encontrado")
+      }
+      throw new Error(`Error al cargar detalles del restaurante: ${response.status}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error("Error fetching restaurant details:", error)
+    throw error // Re-throw to let the component handle it
   }
-
-  return response.json()
 }
 
 // Auth functions
@@ -69,7 +89,7 @@ export async function loginUser(credentials: { email: string; password: string }
   return response.json()
 }
 
-export async function registerUser(data: { name: string; email: string; password: string; foodPreferences?: string }) {
+export async function registerUser(data: { name: string; email: string; password: string; foodPreferences?: string; role?: string }) {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: {
@@ -160,29 +180,45 @@ export async function markNotificationAsRead(id: number) {
 
 // Promotions
 export async function fetchPromotions(city?: string) {
-  const params = city ? `?city=${encodeURIComponent(city)}` : ""
-  const response = await fetch(`${API_BASE_URL}/promotions${params}`, {
-    headers: getAuthHeaders(),
-  })
+  try {
+    const params = city ? `?city=${encodeURIComponent(city)}` : ""
+    const response = await fetch(`${API_BASE_URL}/promotions${params}`, {
+      headers: getAuthHeaders(),
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch promotions")
+    if (!response.ok) {
+      // If promotions endpoint fails, return empty array instead of throwing
+      console.warn("Promotions endpoint not available, returning empty array")
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    // If there's a network error or other issue, return empty array
+    console.warn("Error fetching promotions:", error)
+    return []
   }
-
-  return response.json()
 }
 
 // Reviews
 export async function fetchReviewsByRestaurant(restaurantId: number) {
-  const response = await fetch(`${API_BASE_URL}/reviews/restaurant/${restaurantId}`, {
-    headers: getAuthHeaders(),
-  })
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews/restaurant/${restaurantId}`, {
+      headers: getAuthHeaders(),
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch reviews")
+    if (!response.ok) {
+      // If reviews endpoint fails, return empty array instead of throwing
+      console.warn("Reviews endpoint not available, returning empty array")
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    // If there's a network error or other issue, return empty array
+    console.warn("Error fetching reviews:", error)
+    return []
   }
-
-  return response.json()
 }
 
 export async function fetchMyReviews() {
@@ -233,15 +269,23 @@ export async function createReview(review: { restaurant: { id: number }, rating:
 
 // Menu Items
 export async function fetchMenuItems(restaurantId: number) {
-  const response = await fetch(`${API_BASE_URL}/menu-items/restaurant/${restaurantId}`, {
-    headers: getAuthHeaders(),
-  })
+  try {
+    const response = await fetch(`${API_BASE_URL}/menu-items/restaurant/${restaurantId}`, {
+      headers: getAuthHeaders(),
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch menu items")
+    if (!response.ok) {
+      // If menu items endpoint fails, return empty array instead of throwing
+      console.warn("Menu items endpoint not available, returning empty array")
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    // If there's a network error or other issue, return empty array
+    console.warn("Error fetching menu items:", error)
+    return []
   }
-
-  return response.json()
 }
 
 export async function createMenuItem(menuItem: any) {
@@ -286,6 +330,19 @@ export async function deleteMenuItem(id: number) {
 
   if (!response.ok) {
     throw new Error("Failed to delete menu item")
+  }
+
+  return response.json()
+}
+
+// Get current user's restaurants
+export async function fetchMyRestaurants() {
+  const response = await fetch(`${API_BASE_URL}/restaurants/my`, {
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch my restaurants")
   }
 
   return response.json()

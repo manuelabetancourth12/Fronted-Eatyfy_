@@ -30,8 +30,12 @@ export function LoginForm() {
       localStorage.setItem("eatyfy_token", response.token)
       localStorage.setItem("eatyfy_user", JSON.stringify(response.user))
 
-      // Redirect to home
-      router.push("/")
+      // Redirect based on user role
+      if (response.user.role === "RESTAURANT") {
+        router.push("/restaurant-dashboard")
+      } else {
+        router.push("/dashboard")
+      }
       router.refresh()
     } catch (err) {
       setError("Error al iniciar sesión. Verifica tus credenciales.")

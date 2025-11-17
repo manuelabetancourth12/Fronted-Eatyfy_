@@ -60,6 +60,16 @@ export function Navbar() {
               Restaurantes
             </Link>
             {user && (
+              <Link
+                href="/admin"
+                className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
+                  pathname === "/admin" ? "text-gray-900 font-semibold" : ""
+                }`}
+              >
+                Panel Admin
+              </Link>
+            )}
+            {user && (
               <>
                 <Link
                   href="/profile"
@@ -76,16 +86,16 @@ export function Navbar() {
                       pathname === "/restaurant-dashboard" ? "text-gray-900 font-semibold" : ""
                     }`}
                   >
-                    Panel Restaurante
+                    Mi Restaurante
                   </Link>
                 ) : (
                   <Link
-                    href="/register-restaurant"
+                    href="/dashboard"
                     className={`text-gray-700 hover:text-gray-900 transition-colors font-medium ${
-                      pathname === "/register-restaurant" ? "text-gray-900 font-semibold" : ""
+                      pathname === "/dashboard" ? "text-gray-900 font-semibold" : ""
                     }`}
                   >
-                    Registrar Restaurante
+                    Mi Panel
                   </Link>
                 )}
               </>
@@ -149,6 +159,15 @@ export function Navbar() {
               Restaurantes
             </Link>
             {user && (
+              <Link
+                href="/admin"
+                className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
+                onClick={() => setIsOpen(false)}
+              >
+                Panel Admin
+              </Link>
+            )}
+            {user && (
               <>
                 <Link
                   href="/profile"
@@ -163,15 +182,15 @@ export function Navbar() {
                     className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
                     onClick={() => setIsOpen(false)}
                   >
-                    Panel Restaurante
+                    Mi Restaurante
                   </Link>
                 ) : (
                   <Link
-                    href="/register-restaurant"
+                    href="/dashboard"
                     className="block px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
                     onClick={() => setIsOpen(false)}
                   >
-                    Registrar Restaurante
+                    Mi Panel
                   </Link>
                 )}
               </>

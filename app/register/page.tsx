@@ -1,13 +1,13 @@
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { RegisterForm } from "@/components/register-form"
+import { RegisterTypeSelection } from "@/components/register-type-selection"
 
 export default function RegisterPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-12 bg-[var(--color-muted)]">
-        <RegisterForm />
+      <main className="flex-1 bg-gray-50 flex items-center justify-center py-12">
+        <RegisterTypeSelection />
       </main>
       <Footer />
     </div>

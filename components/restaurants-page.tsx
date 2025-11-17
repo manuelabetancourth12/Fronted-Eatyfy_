@@ -11,6 +11,14 @@ import { fetchRestaurantsByCity } from "@/lib/api-client"
 import { Loader2, MapPin, DollarSign } from "lucide-react"
 import Link from "next/link"
 
+interface MenuItem {
+  id: number
+  name: string
+  description?: string
+  price: number
+  category?: string
+}
+
 interface Restaurant {
   id: string
   name: string
@@ -20,6 +28,7 @@ interface Restaurant {
   lon: number
   cuisine?: string
   priceRange?: string
+  menuItems?: MenuItem[]
 }
 
 export function RestaurantsPage() {
@@ -33,6 +42,12 @@ export function RestaurantsPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Load restaurants on initial mount
+    loadRestaurants()
+  }, [])
+
+  useEffect(() => {
+    // Load restaurants when city changes (but not on initial load)
     if (selectedCity !== "Bogotá, Medellin, Cali, Barranquilla...") {
       loadRestaurants()
     }
@@ -42,10 +57,13 @@ export function RestaurantsPage() {
     if (loading) return
     setLoading(true)
     try {
-      const city = selectedCity.split(",")[0].trim()
+      let cityParam = undefined
+      if (selectedCity !== "Bogotá, Medellin, Cali, Barranquilla...") {
+        cityParam = selectedCity.split(",")[0].trim()
+      }
 
       const data = await fetchRestaurantsByCity(
-        city,
+        cityParam,
         budget ? Number.parseInt(budget) : undefined,
         cuisineType || undefined
       )
@@ -177,6 +195,24 @@ export function RestaurantsPage() {
                         {restaurant.priceRange || "$$"}
                       </span>
                     </div>
+
+                    {/* Menu Items */}
+                    {restaurant.menuItems && restaurant.menuItems.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-2">Platos disponibles:</p>
+                        <div className="space-y-1 max-h-20 overflow-y-auto">
+                          {restaurant.menuItems.slice(0, 3).map((item) => (
+                            <div key={item.id} className="flex justify-between items-center text-xs bg-gray-50 px-2 py-1 rounded">
+                              <span className="truncate">{item.name}</span>
+                              <span className="font-medium text-pink-600">${item.price?.toLocaleString()}</span>
+                            </div>
+                          ))}
+                          {restaurant.menuItems.length > 3 && (
+                            <p className="text-xs text-gray-400">+{restaurant.menuItems.length - 3} más...</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <Link href={`/restaurants/${restaurant.id}`}>
                       <Button variant="outline" className="w-full border-gray-300 bg-transparent">

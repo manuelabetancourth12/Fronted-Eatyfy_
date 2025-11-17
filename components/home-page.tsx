@@ -30,13 +30,9 @@ export function HomePage() {
       // For non-logged-in users, show general recommendations
       fetchRestaurantsByCity().then(data => {
         setRestaurants(data.slice(0, 3)) // Show first 3
-      }).catch(() => {
-        // Fallback to mock if no data
-        setRestaurants([
-          { id: 1, name: "Restaurante 1", averagePricePerPerson: 30000, address: "Bogotá", cuisineType: "Italiana" },
-          { id: 2, name: "Restaurante 2", averagePricePerPerson: 50000, address: "Medellín", cuisineType: "Mexicana" },
-          { id: 3, name: "Restaurante 3", averagePricePerPerson: 25000, address: "Cali", cuisineType: "Colombiana" },
-        ])
+      }).catch((error) => {
+        console.error("Error loading restaurants:", error)
+        setRestaurants([])
       })
     }
   }, [])
