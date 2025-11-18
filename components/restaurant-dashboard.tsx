@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { fetchUserProfile, updateRestaurant, fetchReviewsByRestaurant } from "@/lib/api-client"
+import { fetchUserProfile, updateRestaurant, fetchReviewsByRestaurant, fetchMyRestaurants } from "@/lib/api-client"
 import { Settings, Utensils, MessageSquare, Save, Loader2, Star, User } from "lucide-react"
 
 export function RestaurantDashboard() {
@@ -36,38 +36,36 @@ export function RestaurantDashboard() {
     try {
       const userData = await fetchUserProfile()
 
-      // Find restaurant owned by this user
-      // For now, assume user has one restaurant - in real app, would need to select or list
       if (userData.role !== "RESTAURANT") {
         router.push("/register-restaurant")
         return
       }
 
-      // This would need to be implemented: fetch user's restaurants
-      // For now, we'll show a placeholder
-      setRestaurant({
-        id: 1,
-        name: "Mi Restaurante",
-        address: "Calle 123, Bogotá",
-        cuisineType: "Italiana",
-        phone: "+57 300 123 4567",
-        website: "https://mirestaurante.com",
-        openingHours: "Lun-Dom: 12:00-22:00",
-        averagePricePerPerson: 35000
-      })
+      // Fetch user's restaurants
+      const userRestaurants = await fetchMyRestaurants()
+
+      if (userRestaurants.length === 0) {
+        // No restaurants, redirect to register
+        router.push("/register-restaurant")
+        return
+      }
+
+      // Use the first restaurant (or implement selection later)
+      const restaurantData = userRestaurants[0]
+      setRestaurant(restaurantData)
 
       setFormData({
-        name: "Mi Restaurante",
-        address: "Calle 123, Bogotá",
-        cuisineType: "Italiana",
-        phone: "+57 300 123 4567",
-        website: "https://mirestaurante.com",
-        openingHours: "Lun-Dom: 12:00-22:00",
-        averagePricePerPerson: "35000"
+        name: restaurantData.name || "",
+        address: restaurantData.address || "",
+        cuisineType: restaurantData.cuisineType || "",
+        phone: restaurantData.phone || "",
+        website: restaurantData.website || "",
+        openingHours: restaurantData.openingHours || "",
+        averagePricePerPerson: restaurantData.averagePricePerPerson?.toString() || ""
       })
 
       // Load reviews for this restaurant
-      const reviewsData = await fetchReviewsByRestaurant(1)
+      const reviewsData = await fetchReviewsByRestaurant(restaurantData.id)
       setReviews(reviewsData)
 
     } catch (error) {
