@@ -27,7 +27,7 @@ export async function fetchRestaurantsByCity(city?: string, budget?: number, cui
   if (budget) params.set("budget", budget.toString())
 
   const response = await fetch(`${API_BASE_URL}/restaurants/search?${params}`, {
-    headers: {},
+    headers: getAuthHeaders(),
   })
 
   if (!response.ok) {
