@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { HomePage } from "@/components/home-page"
+import { Chatbot } from "@/components/chatbot"
 
 export default function Page() {
   return (
@@ -8,6 +9,7 @@ export default function Page() {
       <Navbar />
       <HomePage />
       <Footer />
+      <Chatbot />
     </div>
   )
 }

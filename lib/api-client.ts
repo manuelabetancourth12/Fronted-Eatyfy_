@@ -1,6 +1,6 @@
 // API Client for backend communication
 
-const API_BASE_URL = `https://eatyfy-backend-production.up.railway.app/api?t=${Date.now()}`
+const API_BASE_URL = `http://localhost:8084/api?t=${Date.now()}`
 
 // Helper function to get auth headers
 function getAuthHeaders(): Record<string, string> {
